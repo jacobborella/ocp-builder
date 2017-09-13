@@ -8,6 +8,5 @@ spec:
     jenkinsPipelineStrategy:
       jenkinsfile: |-
         node {
-          sh 'oc new-project test'
           sh 'oc new-app centos/ruby-22-centos7~https://github.com/openshift/ruby-ex.git'
         }
