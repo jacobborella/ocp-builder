@@ -15,4 +15,5 @@ spec:
           git url: gitUrl
   
           stage 'Identify new/updated projects'
+          sh 'echo foobar'
         } 
