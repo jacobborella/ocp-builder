@@ -30,13 +30,23 @@ spec:
               sh returnStdout: true, script: 'git ls-files -s ' + files[i].getPath() + '|cut -d" " -f2'
             currGitVersion = currGitVersion.trim()
 
-            //investigate whether the pipeline already exists
+            def projectName = files[i].getPath().substring(0, files[i].getPath().length() - files[i].getName().length() - 1)
+            println 'using project ' + projectName
             def exists = false
             try {
-                sh returnStdout: true, script: 'oc get bc|grep ' + currPipelineName
+                sh 'oc project ' + projectName
                 exists = true
             } catch(e) {}
+            //investigate whether the pipeline already exists
             if(exists) {
+                exists = false
+                try {
+                    sh returnStdout: true, script: 'oc get bc|grep ' + currPipelineName
+                    exists = true
+                } catch(e) {}
+            }
+
+           if(exists) {
                 //it does update it if version is different than already deployed
                 //this method is a bit brittle - find better solution
                 def prevGitVersion =
@@ -48,6 +58,7 @@ spec:
                     sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
                 }
             } else {
+                sh 'oc new-project ' + projectName
                 //it doesn't create it
                 sh 'oc create -f ' + files[i].getPath()
                 sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
