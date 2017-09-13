@@ -7,11 +7,12 @@ spec:
     type: "JenkinsPipeline"
     jenkinsPipelineStrategy:
       jenkinsfile: |-
-        node('maven') {
+        node {
           // define commands
-          def mvnCmd = "mvn -s configuration/settings.xml"
+          def gitUrl = 'https://github.com/jacobborella/ocp-builder.git'
 
-          stage 'Build'
-          git url: 'https://github.com/jacobborella/kitchensink-example.git'
-          sh "pwd"
+          stage 'Get all projects from git'
+          git url: gitUrl
+  
+          stage 'Identify new/updated projects'
         } 
