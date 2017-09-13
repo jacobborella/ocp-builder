@@ -9,4 +9,5 @@ spec:
       jenkinsfile: |-
         node {
           sh 'oc new-app centos/ruby-22-centos7~https://github.com/openshift/ruby-ex.git'
+          sh 'oc expose svc ruby-ex'
         }
