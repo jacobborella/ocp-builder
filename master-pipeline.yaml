@@ -1,0 +1,17 @@
+kind: "BuildConfig"
+apiVersion: "v1"
+metadata:
+  name: "master-pipeline"
+spec:
+  strategy:
+    type: "JenkinsPipeline"
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        node('maven') {
+          // define commands
+          def mvnCmd = "mvn -s configuration/settings.xml"
+
+          stage 'Build'
+          git url: 'https://github.com/jacobborella/kitchensink-example.git'
+          sh "pwd"
+        } 
