@@ -7,52 +7,52 @@ spec:
     type: "JenkinsPipeline"
     jenkinsPipelineStrategy:
       jenkinsfile: |-
-node {
-  // define commands
-  def gitUrl = 'https://github.com/jacobborella/ocp-builder.git'
+        node {
+          // define commands
+          def gitUrl = 'https://github.com/jacobborella/ocp-builder.git'
 
-  stage 'Get all projects from git'
-  git url: gitUrl
+          stage 'Get all projects from git'
+          git url: gitUrl
 
-  stage 'Identify new/updated projects'
-  sh 'oc project jenkins-master'
-  def files = findFiles glob: '**/*.yaml'
-  println 'number of files to deploy ' + files.length
-  for(i=0; i<files.length; i++){
-      if ("master-pipeline.yaml".equals(files[i].getPath())) {
-          println "master-pipeline will not be deployed"
-          continue//ignore the master-pipeline
-      }
-    //change to inspect annotation in file. Right now it's assumed that template name and filename is the same
-    def currPipelineName = files[i].getName()
-    currPipelineName = currPipelineName.substring(0, currPipelineName.length() - 5)
-    def currGitVersion =
-      sh returnStdout: true, script: 'git ls-files -s ' + files[i].getPath() + '|cut -d" " -f2'
-    currGitVersion = currGitVersion.trim()
+          stage 'Identify new/updated projects'
+          sh 'oc project jenkins-master'
+          def files = findFiles glob: '**/*.yaml'
+          println 'number of files to deploy ' + files.length
+          for(i=0; i<files.length; i++){
+              if ("master-pipeline.yaml".equals(files[i].getPath())) {
+                  println "master-pipeline will not be deployed"
+                  continue//ignore the master-pipeline
+              }
+            //change to inspect annotation in file. Right now it's assumed that template name and filename is the same
+            def currPipelineName = files[i].getName()
+            currPipelineName = currPipelineName.substring(0, currPipelineName.length() - 5)
+            def currGitVersion =
+              sh returnStdout: true, script: 'git ls-files -s ' + files[i].getPath() + '|cut -d" " -f2'
+            currGitVersion = currGitVersion.trim()
 
-    //investigate whether the pipeline already exists
-    def exists = false
-    try {
-        sh returnStdout: true, script: 'oc get bc|grep ' + currPipelineName
-        exists = true
-    } catch(e) {}
-    if(exists) {
-        //it does update it if version is different than already deployed
-        //this method is a bit brittle - find better solution
-        def prevGitVersion =
-          sh returnStdout: true, script: 'oc describe bc ' + currPipelineName + '|grep git-version=|head -1|cut -d"=" -f2'
-        prevGitVersion = prevGitVersion.trim()
-        println 'previous git version is ' + prevGitVersion + ' current is ' + currGitVersion
-        if(!currGitVersion.equals(prevGitVersion)) {
-            sh 'oc replace -f ' + files[i].getPath()
-            sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
-        }
-    } else {
-        //it doesn't create it
-        sh 'oc create -f ' + files[i].getPath()
-        sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
-    }
-    //last case is if a pipeline no longer exists. How do we get rid of ressources?
-  }
-}
+            //investigate whether the pipeline already exists
+            def exists = false
+            try {
+                sh returnStdout: true, script: 'oc get bc|grep ' + currPipelineName
+                exists = true
+            } catch(e) {}
+            if(exists) {
+                //it does update it if version is different than already deployed
+                //this method is a bit brittle - find better solution
+                def prevGitVersion =
+                  sh returnStdout: true, script: 'oc describe bc ' + currPipelineName + '|grep git-version=|head -1|cut -d"=" -f2'
+                prevGitVersion = prevGitVersion.trim()
+                println 'previous git version is ' + prevGitVersion + ' current is ' + currGitVersion
+                if(!currGitVersion.equals(prevGitVersion)) {
+                    sh 'oc replace -f ' + files[i].getPath()
+                    sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
+                }
+            } else {
+                //it doesn't create it
+                sh 'oc create -f ' + files[i].getPath()
+                sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
+            }
+            //last case is if a pipeline no longer exists. How do we get rid of ressources?
+          }
+        }                
 
