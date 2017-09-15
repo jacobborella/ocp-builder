@@ -56,7 +56,9 @@ spec:
                     sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
                 }
             } else {
-                //it doesn't create it
+                //if pipeline doesn't exist, then create artifacts with create script
+                sh '. ' + files[i].getPath().replace('.yaml', '.create.sh')
+                //then create the pipeline
                 sh 'oc create -f ' + files[i].getPath()
                 sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
             }
