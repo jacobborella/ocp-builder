@@ -32,19 +32,17 @@ spec:
 
             def projectName = files[i].getPath().substring(0, files[i].getPath().length() - files[i].getName().length() - 1)
             println 'using project ' + projectName
-            def exists = false
             try {
                 sh 'oc project ' + projectName
+            } catch(e) {
+                sh 'oc new-project ' + projectName
+            }
+            //investigate whether the pipeline already exists
+            def exists = false
+            try {
+                sh returnStdout: true, script: 'oc get bc|grep ' + currPipelineName
                 exists = true
             } catch(e) {}
-            //investigate whether the pipeline already exists
-            if(exists) {
-                exists = false
-                try {
-                    sh returnStdout: true, script: 'oc get bc|grep ' + currPipelineName
-                    exists = true
-                } catch(e) {}
-            }
 
            if(exists) {
                 //it does update it if version is different than already deployed
@@ -58,7 +56,6 @@ spec:
                     sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
                 }
             } else {
-                sh 'oc new-project ' + projectName
                 //it doesn't create it
                 sh 'oc create -f ' + files[i].getPath()
                 sh 'oc annotate bc ' + currPipelineName + ' git-version=' + currGitVersion
