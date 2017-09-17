@@ -1,5 +1,3 @@
 #!/bin/bash
-oc new-build --image-stream=openjdk18-openshift --binary=true --name=hello-world
-oc start-build hello-world --from-dir=.
-oc new-app hello-world
+oc new-app openjdk18-openshift~https://github.com/jacobborella/myproject --name hello-world -e GREETING=Hello GOTO
 oc expose svc hello-world
